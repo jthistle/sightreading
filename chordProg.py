@@ -73,14 +73,16 @@ class ProgressionGen:
 				link("vi", 1, path("bvio", 2), path("d", 1))
 			],
 			"vi": [
-				link("III", 2, path("d")),
+				link("III", 1, path("d")),
+				link("III7", 1, path("d")),
 				link("iii", 1, path("d")),
 				link("ii", 2, path("d")),
 				link("IV", 2, path("d", 1), path("V", 2)),
 				link("V", 1, path("d")),
 				link("V7", 1, path("d")),
 				link("I", 1, path("d")),
-				link("II", 2, path("d"))
+				link("II7", 1, path("d")),
+				link("II", 1, path("d"))
 			],
 			"II": [
 				link("V", 1, path("d")),
@@ -88,41 +90,60 @@ class ProgressionGen:
 			],
 			"III": [
 				link("vi", 2, path("d")),
+				link("IV", 2, path("d"))
+			],
+			"III7": [
+				link("vi", 2, path("d")),
 				link("IV", 1, path("d"))
 			],
+			"II7": [
+				link("V", 1, path("d")),
+				link("V7", 1, path("d")),
+			],
 			"V7": [
-				link("I", 2, path("d")),
-				link("vi", 1, path("d", 2), path("bvio", 1)),  # these weightings are correct.
+				link("I", 3, path("d")),
+				link("vi", 2, path("d", 2), path("bvio", 1)),  # these weightings are correct.
+				link("IV", 1, path("d"))
 			]
 		}
 
 	def new(self):
 		# 7 is temporary, can be randomized phrase length
 		prog = []
-		prog.append(chord("I", 8))
+		prog.append(chord("I", 4))
 		lastChord = "I"
 		for i in range(7):
 			force = None
-			if i == 5:
-				force = ["IV", "V", "III"]
+			if i == 2:
+				force = ["V7", "IV", "III7"]
+			elif i == 5:
+				if lastChord in ("vi", "ii"):
+					force = ["III", "III7"]
+				else:
+					force = ["IV", "V7", "V"]
 			elif i == 6:
-				if lastChord == "III":
+				if lastChord in ("III7", "III", "II", "II7"):
 					force = ["vi"]
 				else:
 					force = ["I"]
 
-			link = self.chooseFromLinks(self.links[lastChord], force)
-			path = self.chooseFromPaths(link["paths"])
-
-			if path["path"] == "d":
-				prog.append(chord(link["chord"], 8))
+			# Consider repeating last chord
+			if i in (0, 4) and random.randint(1,3) == 1:
+				# Go back and make last chord one beat longer
+				prog[-1]["duration"] += 4
 			else:
-				# Go back and make last chord half length
-				prog[-1]["duration"] = 4
-				prog.append(chord(path["path"], 4))
-				prog.append(chord(link["chord"], 8))
+				link = self.chooseFromLinks(self.links[lastChord], force)
+				path = self.chooseFromPaths(link["paths"])
 
-			lastChord = link["chord"]
+				if path["path"] == "d":
+					prog.append(chord(link["chord"], 4))
+				else:
+					# Go back and make last chord half length
+					prog[-1]["duration"] = 2
+					prog.append(chord(path["path"], 2))
+					prog.append(chord(link["chord"], 4))
+
+				lastChord = link["chord"]
 
 		return prog
 
@@ -186,7 +207,7 @@ class ProgressionGen:
 			chordToAdd = {
 				"duration": chord["duration"]
 			}
-
+			print("duration",chord["duration"])
 			chordNumeral = chord["chord"]
 			chordLookup = chordNumeral
 			chordMood = "major"

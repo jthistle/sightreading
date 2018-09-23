@@ -133,8 +133,23 @@ class MusicWriter:
 
 							durationElement = SubElement(tempNote, "duration")
 							durationElement.text = str(duration)
+
+							writeDot = False
+							if duration not in DURATION_NAMES:
+								i = duration
+								while i > 0 and i not in DURATION_NAMES:
+									i -= 1
+								durName = DURATION_NAMES[i]
+								writeDot = True
+							else:
+								durName = DURATION_NAMES[duration]
+
 							typeElement = SubElement(tempNote, "type")
-							typeElement.text = DURATION_NAMES[duration]
+							typeElement.text = durName
+
+							# Dots must be written after type tag, for some reason.
+							if writeDot:
+								SubElement(tempNote, "dot")  # add dot
 					else:
 						# Assume rest
 						tempNote = SubElement(barElement, "note")
