@@ -14,3 +14,50 @@ DURATION_NAMES = {
 	QUAVER: "eighth",
 	SEMIQUAVER: "16th"
 }
+
+EXAMPLE_DATA = {
+		"timeSig": [4, 4],
+		"keySig": 0,
+		"clef": "treble",
+		"bars": [
+			{
+				"chords": [
+					{
+						"duration": MINIM,
+						"notes": [
+							note("C", 4),
+							note("E", 4)
+						]
+					},
+					{
+						"duration": MINIM,
+						"notes": [
+							note("G", 4),
+							note("E", 4)
+						]
+					}
+				]
+			},
+			{
+				"chords": [
+					{
+						"duration": CROTCHET,
+						"notes": [
+							note("A", 4),
+							note("C", 4)
+						]
+					},
+					{
+						"duration": CROTCHET,
+						"rest": True
+					},
+					{
+						"duration": SEMIQUAVER,
+						"notes": [
+							note("D", 4)
+						]
+					}
+				]
+			}
+		]
+	}

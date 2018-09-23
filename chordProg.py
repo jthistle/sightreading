@@ -50,7 +50,8 @@ class ProgressionGen:
 		self.links = {
 			"I": [
 				link("IV", 2, path("d")),
-				link("V", 2, path("d")),
+				link("V", 1, path("d")),
+				link("V7", 1, path("d")),
 				link("vi", 1, path("bvio", 1), path("d", 2))
 			],
 			"ii": [
@@ -62,7 +63,8 @@ class ProgressionGen:
 			],
 			"IV": [
 				link("I", 2, path("d")),
-				link("V", 2, path("d")),
+				link("V", 1, path("d")),
+				link("V7", 1, path("d")),
 				link("vi", 1, path("bvio", 2), path("d", 1))
 			],
 			"V": [
@@ -74,17 +76,23 @@ class ProgressionGen:
 				link("III", 2, path("d")),
 				link("iii", 1, path("d")),
 				link("ii", 2, path("d")),
-				link("IV", 2, path("d")),
+				link("IV", 2, path("d", 1), path("V", 2)),
 				link("V", 1, path("d")),
+				link("V7", 1, path("d")),
 				link("I", 1, path("d")),
 				link("II", 2, path("d"))
 			],
 			"II": [
-				link("V", 2, path("d"))
+				link("V", 1, path("d")),
+				link("V7", 1, path("d")),
 			],
 			"III": [
 				link("vi", 2, path("d")),
 				link("IV", 1, path("d"))
+			],
+			"V7": [
+				link("I", 2, path("d")),
+				link("vi", 1, path("d", 2), path("bvio", 1)),  # these weightings are correct.
 			]
 		}
 
@@ -109,6 +117,7 @@ class ProgressionGen:
 			if path["path"] == "d":
 				prog.append(chord(link["chord"], 8))
 			else:
+				# Go back and make last chord half length
 				prog[-1]["duration"] = 4
 				prog.append(chord(path["path"], 4))
 				prog.append(chord(link["chord"], 8))
@@ -184,16 +193,15 @@ class ProgressionGen:
 			if chordNumeral[-1] == "o":
 				chordLookup = chordNumeral[:-1]
 				chordMood = "dim"
+			elif chordNumeral[-1] == "7":
+				chordLookup = chordNumeral[:-1]
+				chordMood = "dom"
 
-			if chordMood != "dim":
+			if chordMood not in ("dim", "dom"):
 				if any(x.isupper() for x in chordLookup):
 					chordMood = "major"
 				else:
 					chordMood = "minor"
-
-				if chordNumeral == "V":
-					# For the sake of testing, make all V chords into V7
-					chordMood = "dom"
 
 			startSemitone = self.semitoneMap[chordLookup.upper()]
 			notesToAdd = []
