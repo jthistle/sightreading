@@ -19,10 +19,22 @@ class ProgressionGen:
 			"II": 2,
 			"III": 4,
 			"IV": 5,
+			"#IV": 6,
 			"V": 7,
 			"BVI": 8,
 			"VI": 9,
 			"VII": 11,
+		}
+
+		self.minorSemitoneMap = {
+			"I": 0,
+			"II": 2,
+			"III": 3,
+			"IV": 5,
+			"#IV": 6,
+			"V": 7,
+			"VI": 8,
+			"BVII": 10,
 		}
 
 		self.semitoneToStep = {
@@ -107,32 +119,106 @@ class ProgressionGen:
 			]
 		}
 
+		self.minorLinks = {
+			"i": [
+				link("iv", 2, path("d", 1), path("I", 2)),
+				link("IV", 1, path("d")),
+				link("V7", 2, path("d", 1), path("#ivo", 2)),
+				link("v", 1, path("d")),
+				link("III", 1, path("d"))
+			],
+			"iio": [
+				link("i", 1, path("d")),
+				link("V7", 2, path("d", 1), path("#ivo", 2)),
+				link("iv", 1, path("d"))
+			],
+			"III": [
+				link("bVII", 1, path("d")),
+				link("VI", 2, path("V7", 2), path("d", 1)),
+				link("V7", 2, path("d"))
+			],
+			"iv": [
+				link("V7", 2, path("#ivo", 2), path("d")),
+				link("v", 1, path("d")),
+				link("bVII", 3, path("d"))  # weighting is correct
+			],
+			"IV": [
+				link("VI", 2, path("d")),
+				link("V7", 1, path("#ivo", 1), path("d", 2))  # correct weighting
+			],
+			"v": [
+				link("i", 2, path("d")),
+				link("VI", 2, path("d")),
+				link("iio", 1, path("d"))
+			],
+			"V7": [
+				link("i", 2, path("d")),
+				link("VI", 2, path("d")),
+				link("iio", 1, path("d"))
+			],
+			"VI": [
+				link("bVII", 1, path("d")),
+				link("III", 1, path("d")),
+				link("iv", 2, path("d"))
+			],
+			"bVII":[
+				link("III", 2, path("d")),
+				link("V7", 2, path("d"))
+			]
+		}
+
 	def new(self):
 		# 7 is temporary, can be randomized phrase length
+		# TODO: allow starting on different chords
+		# TODO: minor chord progressions
+
+		minor = random.randint(0, 1)
 		prog = []
-		prog.append(chord("I", 4))
-		lastChord = "I"
+
+		if minor:
+			prog.append(chord("i", 4))
+			lastChord = "i"
+		else:
+			prog.append(chord("I", 4))
+			lastChord = "I"
 		for i in range(7):
 			force = None
-			if i == 2:
-				force = ["V7", "IV", "III7"]
-			elif i == 5:
-				if lastChord in ("vi", "ii"):
-					force = ["III", "III7"]
-				else:
-					force = ["IV", "V7", "V"]
-			elif i == 6:
-				if lastChord in ("III7", "III", "II", "II7"):
-					force = ["vi"]
-				else:
-					force = ["I"]
+			if minor:
+				if i == 2:
+					force = ["V7", "v", "iv", "bVII"]
+				elif i == 5:
+					if lastChord in ("III", "bVII", "VI"):
+						force = ["bVII", "VI"]
+					else:
+						force = ["iv", "V7", "v", "iio"]
+				elif i == 6:
+					if lastChord in ("bVII", "VI"):
+						force = ["III"]
+					else:
+						force = ["i"]
+			else:
+				if i == 2:
+					force = ["V7", "IV", "III7"]
+				elif i == 5:
+					if lastChord in ("vi", "ii"):
+						force = ["III", "III7"]
+					else:
+						force = ["IV", "V7", "V"]
+				elif i == 6:
+					if lastChord in ("III7", "III", "II", "II7"):
+						force = ["vi"]
+					else:
+						force = ["I"]
 
 			# Consider repeating last chord
 			if i in (0, 4) and random.randint(1,3) == 1:
 				# Go back and make last chord one beat longer
 				prog[-1]["duration"] += 4
 			else:
-				link = self.chooseFromLinks(self.links[lastChord], force)
+				if minor:
+					link = self.chooseFromLinks(self.minorLinks[lastChord], force)
+				else:
+					link = self.chooseFromLinks(self.links[lastChord], force)
 				path = self.chooseFromPaths(link["paths"])
 
 				if path["path"] == "d":
@@ -189,7 +275,8 @@ class ProgressionGen:
 		toReturn = {
 			"timeSig": [4, 4],
 			"keySig": 0,
-			"clef": "treble"
+			"clef": "treble",
+			"tempo": "80"
 		}
 
 		bars = []
@@ -224,7 +311,12 @@ class ProgressionGen:
 				else:
 					chordMood = "minor"
 
-			startSemitone = self.semitoneMap[chordLookup.upper()]
+			if prog[0]["chord"] == "i":
+				semiMapToUse = self.minorSemitoneMap
+			else:
+				semiMapToUse = self.semitoneMap
+
+			startSemitone = semiMapToUse[chordLookup.upper()]
 			notesToAdd = []
 			for i in self.intervals[chordMood]+[12]:
 				currentSemitone = (startSemitone + i) % 12

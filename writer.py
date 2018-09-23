@@ -89,6 +89,25 @@ class MusicWriter:
 			sign.text = "G"
 			line.text = "2"
 
+		# TEMPO HANDLING
+		default = True
+		if "tempo" in data.keys():
+			default = False
+			tempoValue = str(data["tempo"])
+
+		if default:
+			tempoValue = "100"
+
+		direction = SubElement(firstBar, "direction")
+		directionType = SubElement(direction, "direction-type")
+		metronome = SubElement(directionType, "metronome")
+		beatUnit = SubElement(metronome, "beat-unit")
+		beatUnit.text = "quarter"
+		perMin = SubElement(metronome, "per-minute")
+		perMin.text = tempoValue
+
+		soundElement = SubElement(direction, "sound", {"tempo": tempoValue})
+
 		# NOTE HANDLING
 		if "bars" in data.keys():
 			barNum = 1
